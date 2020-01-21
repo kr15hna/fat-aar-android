@@ -62,7 +62,22 @@ class FatLibraryPlugin implements Plugin<Project> {
             @Override
             void beforeResolve(ResolvableDependencies resolvableDependencies) {
                 embedConf.dependencies.each { dependency ->
-                    project.dependencies.add('compileOnly', dependency)
+                    Utils.logAnytime('[Dependency name][' + dependency.name + ']')
+                    Utils.logAnytime('[Dependency group][' + dependency.group + ']')
+                    Utils.logAnytime('[Dependency version][' + dependency.version + ']')
+
+                    def modifiedDependency = dependency
+
+                    if (dependency.group == project.parent.name) {
+                        //local module dependency
+                        Utils.logAnytime('[local module dependency detected][' + dependency.name + ']')
+                        def map = new HashMap<String, String>()
+                        map.put("path", ':' + dependency.name)
+                        //this makes the dependency resolve the flavour and buildType correctly
+                        modifiedDependency = project.dependencies.project(map)
+                    }
+                    project.dependencies.add('compileOnly', modifiedDependency)
+
                 }
                 project.gradle.removeListener(this)
             }
